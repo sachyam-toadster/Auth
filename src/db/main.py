@@ -4,7 +4,7 @@ from src.config import settings
 
 engine = create_engine(
     settings.database_url,
-     echo=True
+
 )
 
 SessionLocal = sessionmaker(
@@ -17,6 +17,7 @@ SessionLocal = sessionmaker(
 def get_db():
     db = SessionLocal()
     try:
+        print("DATABASE URL:", settings.database_url)
         yield db
     finally:
         db.close()
