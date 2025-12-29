@@ -7,9 +7,13 @@ from sqlmodel import Session
 from src.db.main import get_db
 import uuid
 from src.books.models import Book
+from src.auth.dependencies import AccessTokenBearer
+
 
 
 book_router = APIRouter()
+acccess_token_bearer = AccessTokenBearer()
+
 
 @book_router.get("/")
 async def root():
@@ -18,19 +22,20 @@ async def root():
 
 
 @book_router.get("/test-books", response_model=List[Book])
-def get_test_books(db: Session = Depends(get_db)):
+def get_test_books(db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer),):
+    print(token_details)
     books = db.query(Book).all()
     return books
 
 @book_router.get("/test-book/{book_id}", response_model=Book)
-def get_test_book(book_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_test_book(book_id: uuid.UUID, db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer)):
     book = db.query(Book).filter(Book.uid == book_id).first()
     if not book:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
     return book 
 
 @book_router.delete("/book/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_test_book(book_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_test_book(book_id: uuid.UUID, db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer)):
     book = db.query(Book).filter(Book.uid == book_id).first()
     if not book:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
@@ -41,7 +46,7 @@ def delete_test_book(book_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @book_router.post("/books", response_model=Book)
-def create_book(book: Book, db: Session = Depends(get_db)):
+def create_book(book: Book, db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer)):
     new_book = Book(
         title=book.title,
         author=book.author,
@@ -57,7 +62,7 @@ def create_book(book: Book, db: Session = Depends(get_db)):
     return new_book
 
 @book_router.patch("/book/{book_id}", response_model=Book)
-def update_test_book(book_id: uuid.UUID, book_update: Book, db: Session = Depends(get_db)):
+def update_test_book(book_id: uuid.UUID, book_update: Book, db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer)):
     book = db.query(Book).filter(Book.uid == book_id).first()
     if not book:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
