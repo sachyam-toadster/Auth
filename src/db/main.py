@@ -1,19 +1,26 @@
-from sqlmodel import create_engine, text
-from sqlalchemy.ext.asyncio import AsyncEngine
-from src.config import Config
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from src.config import settings
 
-engine = AsyncEngine(create_engine(
-    url=Config.DATABASE_URL,
-    echo=True
-))
+engine = create_engine(
+    settings.database_url,
+     echo=True
+)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
 
-async def initdb():
-    """create a connection to our db"""
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-    async with engine.begin() as conn:
-        statement = text("select 'Hello World'")
 
-        result = await conn.execute(statement)
-
-        print(result)
+def initdb():
+    return engine
