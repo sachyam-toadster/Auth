@@ -1,5 +1,6 @@
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
 
 
 class UserCreateModel(BaseModel):
@@ -21,3 +22,13 @@ class UserResponseModel(BaseModel):
 class UserLoginModel(BaseModel):
     email: EmailStr
     password: str  = Field(min_length=6)
+
+class UserReadModel(BaseModel):
+    uid: UUID
+    email: str
+    username: str
+    first_name: str | None
+    last_name: str | None
+    is_verified: bool
+    role: str
+    created_at: datetime

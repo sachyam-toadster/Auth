@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM:str
     ACCESS_TOKEN_EXPIRY: int
     REFRESH_TOKEN_EXPIRY: int
+    redis_url: str
 
     class Config:
         env_file = ".env"
