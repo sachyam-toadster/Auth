@@ -9,12 +9,13 @@ from .utils import verify_password, create_access_token
 from fastapi.responses import JSONResponse
 from datetime import datetime, timedelta
 from src.config import settings
-from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user
+from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
 from src.db.redis import add_jti_to_blocklist
 
 
 auth_router = APIRouter()
 user_service = UserService()
+role_checker = Depends(RoleChecker(["admin", "user"]))
 
 @auth_router.post(
     "/signup",
@@ -104,5 +105,7 @@ async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer(
     )
 
 @auth_router.get("/me", response_model=UserReadModel)
-async def get_current_user(user=Depends(get_current_user)):
+async def get_current_user(
+    user=Depends(get_current_user), _: bool = Depends(RoleChecker(allowed_roles=["admin", "user",]))
+):
     return user

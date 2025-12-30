@@ -7,13 +7,13 @@ from sqlmodel import Session
 from src.db.main import get_db
 import uuid
 from src.books.models import Book
-from src.auth.dependencies import AccessTokenBearer
+from src.auth.dependencies import AccessTokenBearer, RoleChecker
 
 
 
 book_router = APIRouter()
 acccess_token_bearer = AccessTokenBearer()
-
+role_checker = Depends(RoleChecker(["admin", "user"]))
 
 @book_router.get("/")
 async def root():
@@ -21,20 +21,20 @@ async def root():
 
 
 
-@book_router.get("/test-books", response_model=List[Book])
+@book_router.get("/test-books", response_model=List[Book], dependencies=[role_checker])
 def get_test_books(db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer),):
     print(token_details)
     books = db.query(Book).all()
     return books
 
-@book_router.get("/test-book/{book_id}", response_model=Book)
+@book_router.get("/test-book/{book_id}", response_model=Book, dependencies=[role_checker])
 def get_test_book(book_id: uuid.UUID, db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer)):
     book = db.query(Book).filter(Book.uid == book_id).first()
     if not book:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
     return book 
 
-@book_router.delete("/book/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
+@book_router.delete("/book/{book_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[role_checker])
 def delete_test_book(book_id: uuid.UUID, db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer)):
     book = db.query(Book).filter(Book.uid == book_id).first()
     if not book:
@@ -45,7 +45,7 @@ def delete_test_book(book_id: uuid.UUID, db: Session = Depends(get_db), token_de
     return
 
 
-@book_router.post("/books", response_model=Book)
+@book_router.post("/books", response_model=Book, dependencies=[role_checker])
 def create_book(book: Book, db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer)):
     new_book = Book(
         title=book.title,
@@ -61,7 +61,7 @@ def create_book(book: Book, db: Session = Depends(get_db), token_details=Depends
     db.refresh(new_book)
     return new_book
 
-@book_router.patch("/book/{book_id}", response_model=Book)
+@book_router.patch("/book/{book_id}", response_model=Book, dependencies=[role_checker])
 def update_test_book(book_id: uuid.UUID, book_update: Book, db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer)):
     book = db.query(Book).filter(Book.uid == book_id).first()
     if not book:
