@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, status, APIRouter, Depends
-from .schemas import BookSchema, BookUpdateModel
+from .schemas import BookCreateModel, BookSchema, BookUpdateModel
 from .book_data import books
 from typing import List
 from datetime import datetime
@@ -8,12 +8,14 @@ from src.db.main import get_db
 import uuid
 from src.books.models import Book
 from src.auth.dependencies import AccessTokenBearer, RoleChecker
-
+from .service import BookService
 
 
 book_router = APIRouter()
 acccess_token_bearer = AccessTokenBearer()
 role_checker = Depends(RoleChecker(["admin", "user"]))
+book_service = BookService()
+
 
 @book_router.get("/")
 async def root():
@@ -78,3 +80,9 @@ def update_test_book(book_id: uuid.UUID, book_update: Book, db: Session = Depend
     db.commit()
     db.refresh(book)
     return book
+
+@book_router.post("/", status_code=status.HTTP_201_CREATED, response_model=Book, dependencies=[role_checker],)
+async def create_a_book(book_data: BookCreateModel, session: Session = Depends(get_db), token_details: dict = Depends(acccess_token_bearer)) -> dict:
+    user_id = token_details.get("user")["user_uid"]
+    new_book = book_service.create_book(book_data, user_id, session)
+    return new_book

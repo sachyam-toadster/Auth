@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 from src.auth.models import User
-from .schemas import UserCreateModel, UserResponseModel, UserLoginModel, UserReadModel
+from .schemas import UserBooksModel, UserCreateModel, UserResponseModel, UserLoginModel, UserBooksModel
 from .service import UserService
 from src.db.main import get_db
 from sqlalchemy.orm import Session
@@ -104,7 +104,7 @@ async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Or expired token"
     )
 
-@auth_router.get("/me", response_model=UserReadModel)
+@auth_router.get("/me", response_model=UserBooksModel)
 async def get_current_user(
     user=Depends(get_current_user), _: bool = Depends(RoleChecker(allowed_roles=["admin", "user",]))
 ):
