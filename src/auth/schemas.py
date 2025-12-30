@@ -2,7 +2,7 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from typing import List, Optional
-from src.books.models import Book
+from src.db.models import Book
 import uuid
 
 class UserCreateModel(BaseModel):

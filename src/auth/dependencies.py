@@ -8,7 +8,7 @@ from src.db.redis import token_in_blocklist
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.db.main import get_db
 from .service import UserService
-from src.auth.models import User
+from src.db.models import User
 from typing import List, Any
 
 class TokenBearer(HTTPBearer):

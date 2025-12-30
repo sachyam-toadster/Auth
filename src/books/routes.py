@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlmodel import Session
 from src.db.main import get_db
 import uuid
-from src.books.models import Book
+from src.db.models import Book
 from src.auth.dependencies import AccessTokenBearer, RoleChecker
 from .service import BookService
 

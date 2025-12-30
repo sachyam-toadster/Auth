@@ -5,7 +5,7 @@ from alembic import context
 
 from src.config import settings as Config
 import src.books.models
-import src.auth.models
+import src.db.models
 from sqlmodel import SQLModel
 
 # Alembic Config object

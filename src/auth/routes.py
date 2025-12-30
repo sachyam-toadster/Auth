@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status
-from src.auth.models import User
+from src.db.models import User
 from .schemas import UserBooksModel, UserCreateModel, UserResponseModel, UserLoginModel, UserBooksModel
 from .service import UserService
 from src.db.main import get_db
