@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 from src.db.models import User
-from .schemas import UserBooksModel, UserCreateModel, UserResponseModel, UserLoginModel, UserBooksModel
+from .schemas import UserBooksModel, UserCreateModel, UserResponseModel, UserLoginModel
 from .service import UserService
 from src.db.main import get_db
 from sqlalchemy.orm import Session

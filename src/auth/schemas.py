@@ -2,7 +2,7 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from typing import List, Optional
-from src.db.models import Book
+from src.db.models import Book, Review
 import uuid
 
 class UserCreateModel(BaseModel):
@@ -49,3 +49,4 @@ class UserModel(BaseModel):
 
 class UserBooksModel(UserModel):
     books: List[Book]
+    reviews: List[Review]  

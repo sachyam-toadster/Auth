@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, status, APIRouter, Depends
-from .schemas import BookCreateModel, BookSchema, BookUpdateModel
+from .schemas import BookCreateModel, BookSchema, BookUpdateModel, BookwithReviewsModel
 from .book_data import books
 from typing import List
 from datetime import datetime
@@ -29,7 +29,7 @@ def get_test_books(db: Session = Depends(get_db), token_details=Depends(acccess_
     books = db.query(Book).all()
     return books
 
-@book_router.get("/test-book/{book_id}", response_model=Book, dependencies=[role_checker])
+@book_router.get("/test-book/{book_id}", response_model=BookwithReviewsModel, dependencies=[role_checker])
 def get_test_book(book_id: uuid.UUID, db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer)):
     book = db.query(Book).filter(Book.uid == book_id).first()
     if not book:

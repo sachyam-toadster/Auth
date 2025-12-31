@@ -9,14 +9,14 @@ from .schemas import BookCreateModel
 class BookService:
 
 
-    async def get_user_books(self, user_uid: str, session: AsyncSession):
+    def get_user_books(self, user_uid: str, session: AsyncSession):
         statement = (
             select(Book)
             .where(Book.user_uid == user_uid)
             .order_by(desc(Book.created_at))
         )
 
-        result = await session.exec(statement)
+        result = session.exec(statement)
 
         return result.all()
 
@@ -34,3 +34,12 @@ class BookService:
         session.commit()
         session.refresh(new_book)
         return new_book
+
+    def get_book_by_uid(
+        self, book_uid: str, session: AsyncSession
+    ) -> Book | None:
+        statement = select(Book).where(Book.uid == book_uid)
+
+        result = session.execute(statement)
+
+        return result.scalar_one_or_none()

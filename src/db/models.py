@@ -4,7 +4,11 @@ import uuid
 from datetime import datetime
 from sqlalchemy.sql import func
 from typing import List, TYPE_CHECKING, Optional
+from sqlalchemy import CheckConstraint
 
+class BookTag(SQLModel, table=True):
+    book_id: uuid.UUID = Field(default=None, foreign_key="books.uid", primary_key=True)
+    tag_id: uuid.UUID = Field(default=None, foreign_key="tags.uid", primary_key=True)
 
 class User(SQLModel, table=True):
     __tablename__ = "user_accounts"
@@ -23,18 +27,14 @@ class User(SQLModel, table=True):
     username: str
     first_name: str = Field(nullable=True)
     last_name: str = Field(nullable=True)
-    role: str = Field(
-        sa_column=Column(pg.VARCHAR, nullable=False, server_default="user")
-    ) 
+    role: str = Field(sa_column=Column(pg.VARCHAR, nullable=False, server_default="user")) 
     is_verified: bool = False
     email: str
     password_hash: str
     created_at: datetime = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False))
     update_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
-
-    books: List["Book"] = Relationship(
-        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
-    )
+    books: List["Book"] = Relationship(back_populates="user", sa_relationship_kwargs={"lazy": "selectin"})
+    reviews: List["Review"] = Relationship(back_populates="user", sa_relationship_kwargs={"lazy": "selectin"})
 
     def __repr__(self) -> str:
         return f"<User {self.username}>"
@@ -63,6 +63,45 @@ class Book(SQLModel , table=True):
     created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.utcnow))
     updated_at:datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.utcnow))
     user: Optional["User"] = Relationship(back_populates="books") 
+    reviews: List["Review"] = Relationship(back_populates="book", sa_relationship_kwargs={"lazy": "selectin"})
+    tags: List["Tag"] = Relationship(link_model=BookTag, back_populates="books", sa_relationship_kwargs={"lazy": "selectin"},)
 
     def __repr__(self) -> str:
         return f"<Book {self.title}>"
+    
+
+class Review(SQLModel, table=True):
+    __tablename__ = "reviews"
+    __table_args__ = (CheckConstraint("rating >= 1 AND rating <= 5", name="rating_range"),)
+    
+    uid: uuid.UUID = Field(sa_column=Column(pg.UUID(as_uuid=True),primary_key=True,default=uuid.uuid4,nullable=False,))
+    rating: int = Field(nullable=False)
+    review_text: str = Field(nullable=False)
+    user_uid: uuid.UUID = Field(foreign_key="user_accounts.uid",nullable=False,)
+    book_uid: uuid.UUID = Field(foreign_key="books.uid",nullable=False,)
+    created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.utcnow))
+    updated_at: datetime = Field(sa_column=Column(pg.TIMESTAMP,default=datetime.utcnow,onupdate=datetime.utcnow,))
+
+    user: Optional["User"] = Relationship(back_populates="reviews")
+    book: Optional["Book"] = Relationship(back_populates="reviews")
+
+    def __repr__(self):
+        return f"<Review book={self.book_uid} user={self.user_uid}>"
+    
+
+
+class Tag(SQLModel, table=True):
+    __tablename__ = "tags"
+    uid: uuid.UUID = Field(
+        sa_column=Column(pg.UUID, nullable=False, primary_key=True, default=uuid.uuid4)
+    )
+    name: str = Field(sa_column=Column(pg.VARCHAR, nullable=False))
+    created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
+    books: List["Book"] = Relationship(
+        link_model=BookTag,
+        back_populates="tags",
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
+
+    def __repr__(self) -> str:
+        return f"<Tag {self.name}>"

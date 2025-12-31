@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from src.reviews.schemas import ReviewModel
 import uuid
 
 class BookSchema(BaseModel):
@@ -28,4 +29,7 @@ class BookCreateModel(BaseModel):
     published_date: str
     page_count: int
     language: str
+
+class BookwithReviewsModel(BookSchema):
+    reviews: list[ReviewModel] = []
 
