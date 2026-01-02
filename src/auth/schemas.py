@@ -50,3 +50,6 @@ class UserModel(BaseModel):
 class UserBooksModel(UserModel):
     books: List[Book]
     reviews: List[Review]  
+
+class EmailModel(BaseModel):
+    address: List[str]

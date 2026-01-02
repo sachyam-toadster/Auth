@@ -1,6 +1,10 @@
 # src/core/exceptions.py
 from typing import Optional
 
+from fastapi import FastAPI, status
+from fastapi.responses import JSONResponse
+from fastapi.requests import Request
+
 
 class BooklyException(Exception):
     status_code: int = 400

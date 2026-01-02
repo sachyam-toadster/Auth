@@ -9,6 +9,18 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRY: int
     redis_url: str
 
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_PORT: int
+    MAIL_SERVER: str
+    MAIL_FROM_NAME: str
+    MAIL_STARTTLS: bool = True
+    MAIL_SSL_TLS: bool = False
+    USE_CREDENTIALS: bool = True
+    VALIDATE_CERTS: bool = True
+    DOMAIN: str
+   
     class Config:
         env_file = ".env"
 

@@ -1,3 +1,4 @@
+from typing import Dict, Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from src.db.models import User
@@ -28,3 +29,13 @@ class UserService:
         session.commit()
         session.refresh(new_user)
         return new_user
+    
+    def update_user(self, user,update_data: Dict[str, Any], session: Session):
+        for key, value in update_data.items():
+            if hasattr(user, key):
+                setattr(user, key, value)
+
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        return user

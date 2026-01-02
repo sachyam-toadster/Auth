@@ -1,3 +1,4 @@
+from http.client import HTTPException
 import uuid
 import jwt
 import logging
@@ -6,6 +7,11 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 from src.config import settings as Config
+from itsdangerous import BadSignature, SignatureExpired, URLSafeSerializer, URLSafeTimedSerializer
+
+serializer = URLSafeTimedSerializer(
+    secret_key=Config.JWT_SECRET, salt="email-configuration"
+)
 
 passwd_context = CryptContext(
     schemes=['bcrypt']
@@ -52,3 +58,23 @@ def decode_token(token: str) -> dict:
     except Exception as e:
         logging.exception(e)
         return None
+    
+
+def create_url_safe_token(data: dict) -> str:
+    """Serialize a dict into a URLSafe token"""
+
+    return serializer.dumps(data, salt=serializer.salt)
+
+def decode_url_safe_token(token:str, max_age=3600) -> dict:
+    """Deserialize a URLSafe token to get data"""
+    try:
+        data = serializer.loads(token, salt=serializer.salt, max_age=max_age)
+        return data
+    except SignatureExpired:
+        raise HTTPException(status_code=400, detail="Token has expired")
+    except BadSignature:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+
+    except Exception as e:
+        logging.error(str(e))
