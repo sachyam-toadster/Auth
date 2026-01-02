@@ -2,11 +2,10 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi import status
 from src.core.exceptions import BooklyException
+from src.core.exceptions import BooklyException
 
 
 def register_exception_handlers(app: FastAPI):
-    print("✅ Bookly exception handlers registered")
-
 
     @app.exception_handler(BooklyException)
     async def bookly_exception_handler(

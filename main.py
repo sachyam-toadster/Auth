@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from src.db.main import initdb
 from src.db.init import create_tables
 from src.core.error_handlers import register_exception_handlers
+from src.middleware import register_middleware
 
 version = 'v1'
 
@@ -22,9 +23,12 @@ app = FastAPI(
     title='Bookly',
     description='A RESTful API for a book review web service',
     version=version,
+    lifespan=lifespan,
     )
 
 register_exception_handlers(app)
+register_middleware(app)
+
 
 app.include_router(
     book_router,
