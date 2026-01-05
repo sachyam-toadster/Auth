@@ -12,18 +12,18 @@ from src.middleware import register_middleware
 version = 'v1'
 
 #the lifespan event
-@asynccontextmanager
-async def lifespan(app: FastAPI):    
-    create_tables()
-    yield
-    print("server is stopping")
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):    
+#     create_tables()
+#     yield
+#     print("server is stopping")
 
 
 app = FastAPI(
     title='Bookly',
     description='A RESTful API for a book review web service',
     version=version,
-    lifespan=lifespan,
+    # lifespan=lifespan,
     )
 
 register_exception_handlers(app)

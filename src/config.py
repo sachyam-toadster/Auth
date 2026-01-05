@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from uvicorn import Config
 
 
 class Settings(BaseSettings):
@@ -20,9 +21,14 @@ class Settings(BaseSettings):
     USE_CREDENTIALS: bool = True
     VALIDATE_CERTS: bool = True
     DOMAIN: str
+    REDIS_URL: str = "redis://localhost:6379/0"
    
     class Config:
         env_file = ".env"
 
 
 settings = Settings() 
+
+broker_url = settings.REDIS_URL
+result_backend = settings.REDIS_URL
+broker_connection_retry_on_startup = True

@@ -10,7 +10,7 @@ from src.db.main import get_db
 from .service import UserService
 from src.db.models import User
 from typing import List, Any
-
+from src.core.exceptions import AccountNotVerified
 class TokenBearer(HTTPBearer):
 
     def __init__(self, auto_error=True):
@@ -88,6 +88,8 @@ class RoleChecker:
         self.allowed_roles = allowed_roles
 
     def __call__(self, current_user: User = Depends(get_current_user)) -> Any:
+        if not current_user.is_verified:
+            raise AccountNotVerified()
         if current_user.role in self.allowed_roles:
             return True
 

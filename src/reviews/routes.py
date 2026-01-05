@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
+from sqlmodel import UUID, Session
 
 from src.auth.dependencies import RoleChecker, get_current_user
 from src.db.main import get_db

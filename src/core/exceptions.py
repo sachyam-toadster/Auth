@@ -75,3 +75,11 @@ class TagAlreadyExists(BooklyException):
     status_code = 409
     error_code = "tag_exists"
     message = "Tag already exists"
+
+
+class AccountNotVerified(BooklyException):
+    status_code = 403
+    error_code = "account_not_verified"
+    message = "Account not verified. Please verify your email."
+
+

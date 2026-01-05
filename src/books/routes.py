@@ -25,7 +25,6 @@ async def root():
 
 @book_router.get("/test-books", response_model=List[Book], dependencies=[role_checker])
 def get_test_books(db: Session = Depends(get_db), token_details=Depends(acccess_token_bearer),):
-    print(token_details)
     books = db.query(Book).all()
     return books
 

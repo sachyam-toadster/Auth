@@ -7,14 +7,15 @@ from .service import UserService
 from src.db.main import get_db
 from sqlalchemy.orm import Session
 from fastapi.exceptions import HTTPException
-from .utils import verify_password, create_access_token, create_url_safe_token, decode_url_safe_token
+from .utils import verify_password, create_access_token, create_url_safe_token, decode_url_safe_token, generate_password_hash
 from fastapi.responses import JSONResponse
 from datetime import datetime, timedelta
 from src.config import settings
 from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
 from src.db.redis import add_jti_to_blocklist
 from src.mail import mail, create_message
-from src.auth.schemas import EmailModel
+from src.auth.schemas import EmailModel, PasswordResetRequestModel, PasswordResetConfirmModel
+from src.celery_tasks import send_email
 
 auth_router = APIRouter()
 user_service = UserService()
@@ -27,6 +28,7 @@ role_checker = Depends(RoleChecker(["admin", "user"]))
 )
 async def create_user_account(
     user_data: UserCreateModel,
+    bg_tasks: BackgroundTasks,
     session: Session = Depends(get_db),
 ):
     email = user_data.email
@@ -47,11 +49,12 @@ async def create_user_account(
     <p>Please click this <a href="{link}">link</a> to verify your email</p>
     """
 
-    message = create_message(
-        recipients=[email], subject="Verify your email", body=html_message
-    )
+    send_email.delay(
+    subject="Verify your email",
+    recipients=[email],
+    body=html_message,
+)
 
-    await mail.send_message(message)
 
     return {
         "message": "Account Created! Check email to verify your account",
@@ -136,7 +139,7 @@ async def send_mail(emails: EmailModel):
     subject = "Welcome to our app"
 
     message = create_message(recipients=emails, subject=subject, body=html)
-    await mail.send_message(message)
+    send_email.delay(message)
 
     return {"message": "Email sent successfully"}
 
@@ -162,5 +165,69 @@ def verify_user_account(token: str, session: Session = Depends(get_db)):
 
     return JSONResponse(
         content={"message": "Error occured during verification"},
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )
+
+@auth_router.post("/password-reset-request")
+async def password_reset_request(email_data: PasswordResetRequestModel):
+    email = email_data.email
+
+    token = create_url_safe_token({"email": email})
+
+    link = f"http://{settings.DOMAIN}/auth/password-reset-confirm/{token}"
+
+    html_message = f"""
+    <h1>Reset Your Password</h1>
+    <p>Please click this <a href="{link}">link</a> to Reset Your Password</p>
+    """
+
+    send_email.delay(
+        subject="Reset Your Password",
+        recipients=[email],
+        body=html_message
+    )
+    return JSONResponse(
+        content={
+            "message": "Please check your email for instructions to reset your password",
+        },
+        status_code=status.HTTP_200_OK,
+    )
+    
+
+
+@auth_router.post("/password-reset-confirm/{token}")
+async def reset_account_password(
+    token: str,
+    passwords: PasswordResetConfirmModel,
+    session: Session = Depends(get_db),
+):
+    new_password = passwords.new_password
+    confirm_password = passwords.confirm_new_password
+
+    if new_password != confirm_password:
+        raise HTTPException(
+            detail="Passwords do not match", status_code=status.HTTP_400_BAD_REQUEST
+        )
+
+    token_data = decode_url_safe_token(token)
+
+    user_email = token_data.get("email")
+
+    if user_email:
+        user = user_service.get_user_by_email(user_email, session)
+
+        if not user:
+            raise UserNotFound()
+
+        passwd_hash = generate_password_hash(new_password)
+        user_service.update_user(user, {"password_hash": passwd_hash}, session)
+
+        return JSONResponse(
+            content={"message": "Password reset Successfully"},
+            status_code=status.HTTP_200_OK,
+        )
+
+    return JSONResponse(
+        content={"message": "Error occured during password reset."},
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
